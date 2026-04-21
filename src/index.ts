@@ -251,10 +251,10 @@ ATURAN:
 async function main() {
     console.clear();
     console.log("╔══════════════════════════════════════════════════╗");
-    console.log("║  🤖 Chat AI dengan" + LMSTUDIO_MODEL_NAME + "                   ║");
+    console.log("║  🤖 Chat AI dengan " + LMSTUDIO_MODEL_NAME + "              ║");
     console.log("║  Powered by LM Studio + LangChain                ║");
-    console.log("║  💾 Memory: Aktif (5 putaran)                   ║");
-    console.log("║  📂 Workspace: Folder Environment               ║");
+    console.log("║  💾 Memory: Aktif (5 putaran)                    ║");
+    console.log("║  📂 Workspace: Folder Environment                ║");
     console.log("╚══════════════════════════════════════════════════╝");
 
     const isServerRunning = await checkServerStatus();
