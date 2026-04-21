@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "target": "es2022",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "baseUrl": ".",
+        "rootDir": "src",
+        "outDir": "build",
+        "strict": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".tsbuildinfo",
+        "resolveJsonModule": true,
+        "forceConsistentCasingInFileNames": true,
+        "sourceMap": false,
+        "declaration": false,
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        }
+    },
+    "include": [
+        "src"
+    ]
+}
