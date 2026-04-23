@@ -25,13 +25,19 @@ export const createAgent = () => {
 
     function parseToolCalls(text: string): Array<{name: string; params: any}> {
         const toolCalls: Array<{name: string; params: any}> = [];
-        const toolPattern = /TOOL:(\w+)\s*(\{[\s\S]*?\})/g;
-        let match;
+        const toolStartPattern = /TOOL:(\w+)\s*\{/g;
+        let match: RegExpExecArray | null;
 
-        while ((match = toolPattern.exec(text)) !== null) {
+        while ((match = toolStartPattern.exec(text)) !== null) {
+            const name = match[1];
+            const jsonStart = text.indexOf("{", match.index);
+            if (jsonStart === -1) continue;
+
+            const jsonText = extractBalancedJsonObject(text, jsonStart);
+            if (!jsonText) continue;
+
             try {
-                const name = match[1];
-                const params = JSON.parse(match[2]);
+                const params = JSON.parse(jsonText);
                 toolCalls.push({name, params});
             } catch {
                 // Skip invalid JSON
@@ -39,6 +45,47 @@ export const createAgent = () => {
         }
 
         return toolCalls;
+    }
+
+    function extractBalancedJsonObject(text: string, startIndex: number): string | null {
+        let depth = 0;
+        let inString = false;
+        let isEscaped = false;
+
+        for (let i = startIndex; i < text.length; i++) {
+            const char = text[i];
+
+            if (inString) {
+                if (isEscaped) {
+                    isEscaped = false;
+                    continue;
+                }
+                if (char === "\\") {
+                    isEscaped = true;
+                    continue;
+                }
+                if (char === "\"") {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (char === "\"") {
+                inString = true;
+                continue;
+            }
+
+            if (char === "{") {
+                depth++;
+            } else if (char === "}") {
+                depth--;
+                if (depth === 0) {
+                    return text.slice(startIndex, i + 1);
+                }
+            }
+        }
+
+        return null;
     }
 
     async function executeTools(toolCalls: Array<{name: string; params: any}>): Promise<string> {
