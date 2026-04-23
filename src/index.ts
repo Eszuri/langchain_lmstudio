@@ -7,6 +7,19 @@ import "dotenv/config";
 const LMSTUDIO_URL = process.env.LMSTUDIO_BASE_URL || "http://localhost:1234/v1";
 const WORKSPACE_DIR = process.env.WORKSPACE_DIR || process.cwd();
 const LMSTUDIO_MODEL_NAME = process.env.LMSTUDIO_MODEL_NAME;
+const SLASH_AUTOCOMPLETE_ITEMS = [
+    "/help",
+    "/tools",
+    "/clear",
+    "/exit",
+    "/quit",
+    "/read_file",
+    "/write_file",
+    "/update_file",
+    "/delete_file",
+    "/list_folder",
+    "/read_folder_contents",
+];
 
 // ==================== MEMORY ====================
 const MAX_HISTORY_PAIRS = 5;
@@ -174,6 +187,7 @@ function showServerUpMessage() {
     console.log("📁 \x1b[36mTools:\x1b[0m read, write, update, delete, list, read-all");
     console.log("\n📌 \x1b[33mKetik pesanmu dan tekan Enter\x1b[0m");
     console.log("📌 \x1b[33mKetik 'exit' atau 'quit' untuk keluar\x1b[0m\n");
+    console.log("📌 \x1b[33mAutocomplete command: tekan '/' lalu TAB\x1b[0m\n");
     console.log("═".repeat(50) + "\n");
 }
 
@@ -181,11 +195,55 @@ async function startChat() {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
+        completer: (line: string) => {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("/")) {
+                return [[], line];
+            }
+
+            const hits = SLASH_AUTOCOMPLETE_ITEMS.filter((item) => item.startsWith(trimmed));
+            return [hits.length ? hits : SLASH_AUTOCOMPLETE_ITEMS, line];
+        },
+    });
+
+    readline.emitKeypressEvents(process.stdin, rl);
+    process.stdin.on("keypress", (str) => {
+        if (str !== "/") return;
+        if (rl.line.trim().length > 0) return;
+
+        console.log("\n\x1b[35m⚡ Autocomplete aktif:\x1b[0m ketik command lalu tekan TAB");
+        console.log("\x1b[90mContoh: /read_file, /write_file, /list_folder, /exit\x1b[0m");
+        rl.prompt(true);
     });
 
     const askQuestion = () => {
         rl.question("\n\x1b[32m👤 You:\x1b[0m ", async (input) => {
             const userInput = input.trim();
+
+            if (userInput === "/help") {
+                console.log("\n📘 Command autocomplete:");
+                console.log("  /help  - Tampilkan bantuan command");
+                console.log("  /tools - Tampilkan daftar tool");
+                console.log("  /clear - Bersihkan layar");
+                console.log("  /exit  - Keluar dari aplikasi");
+                console.log("  /quit  - Keluar dari aplikasi");
+                askQuestion();
+                return;
+            }
+
+            if (userInput === "/tools") {
+                console.log("\n🧰 Tool yang tersedia:");
+                console.log("  /read_file, /write_file, /update_file, /delete_file");
+                console.log("  /list_folder, /read_folder_contents");
+                askQuestion();
+                return;
+            }
+
+            if (userInput === "/clear") {
+                console.clear();
+                askQuestion();
+                return;
+            }
 
             if (!userInput) {
                 askQuestion();
